@@ -13,7 +13,9 @@ import CheckoutForm from './components/CheckoutForm'
 
 import './components/App.css'
 const stripePromise = loadStripe('pk_test_51IW4PbInLj87z28QIe6fJXdQ6w6cAqd3tvPRMiXIs51J4T0lJQaxf1BCobZuiYLdHWzmEPUB3RVV6hizQaXSV4e400KmlZ32WK');
-
+// data-description="A Flask Charge"
+// data-amount="500"
+// data-locale="auto"
 // Dont call load stripe within the render method of the component
 // dont load more then what you have to.
 const CARD_OPTIONS = {
