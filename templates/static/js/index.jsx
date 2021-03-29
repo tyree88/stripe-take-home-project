@@ -9,7 +9,7 @@ import {
 } from "@stripe/react-stripe-js";
 import {loadStripe} from '@stripe/stripe-js';
 //components
-import CheckoutForm from './components/CheckoutForm'
+import CheckoutForm,{email,name,phone,success} from './components/CheckoutForm'
 
 import './components/App.css'
 const stripePromise = loadStripe('pk_test_51IW4PbInLj87z28QIe6fJXdQ6w6cAqd3tvPRMiXIs51J4T0lJQaxf1BCobZuiYLdHWzmEPUB3RVV6hizQaXSV4e400KmlZ32WK');
@@ -18,6 +18,8 @@ const stripePromise = loadStripe('pk_test_51IW4PbInLj87z28QIe6fJXdQ6w6cAqd3tvPRM
 // data-locale="auto"
 // Dont call load stripe within the render method of the component
 // dont load more then what you have to.
+declare var Success;
+
 const CARD_OPTIONS = {
   iconStyle: "solid",
   style: {
@@ -43,15 +45,39 @@ const CARD_OPTIONS = {
 };
 
 function App() {
+  const [status,setStatus] = React.useState("ready");
+
+  if (status ==="success"){
+    return <div>Congrats on your Purchase!</div>
+  }
   return (
       <Elements stripe ={stripePromise} >
-              <CheckoutForm options={CARD_OPTIONS}/>
+              <CheckoutForm options={CARD_OPTIONS} success={() => {
+                setStatus("success");
+              }}/>
       </Elements>
   );
 
 }
+console.log(email);
+function Success(){
 
-ReactDOM.render(<App />, document.getElementById('root'));
+  return (
+      <div>
+        <h1>Hello World</h1>
+      </div>
+  );
+}
+console.log('success?',success);
+if (success ==="undefined"){
+  ReactDOM.render(<Success />, document.getElementById('root'));
+}
+else{
+  ReactDOM.render(<App />, document.getElementById('root'));
+
+}
+//ReactDOM.render(<App />, document.getElementById('root'));
+
   // Prepare the styles for Elements.
   const style = {
     base: {
@@ -70,3 +96,4 @@ ReactDOM.render(<App />, document.getElementById('root'));
       },
     },
   };
+  export default window.Success;

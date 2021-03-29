@@ -33,6 +33,7 @@
     <title>Buy cool new product</title>
   </head>
   <body>
+    {% extends 'views/layouts/main.html' %} {% block content %}
     <div class="row justify-content-md-center">
       <div class="col-6">
         <div class="text-center mt-40">
@@ -46,14 +47,16 @@
         <div class="card box-shadow mt-40">
           <div class="card-body">
             <form name="payment-form">
+              <div></div>
               <div class="mt-20 text-center text-secondary border-placeholder">
-               <div id='root'></div>
+                <div id="root"></div>
               </div>
             </form>
           </div>
         </div>
       </div>
     </div>
+    {% endblock %}
 
     <script src="public/bundle.js" type="text/javascript"></script>
   </body>

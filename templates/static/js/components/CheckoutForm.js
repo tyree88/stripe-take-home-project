@@ -9,26 +9,32 @@ import {
 import styled from "@emotion/styled";
 import {loadStripe} from '@stripe/stripe-js';
 import '../../js/cardSectionStyles.css';
+export let name, email, phone ; // also var, const
 
+ // also var, const
+const stripePromise = loadStripe('pk_test_51IW4PbInLj87z28QIe6fJXdQ6w6cAqd3tvPRMiXIs51J4T0lJQaxf1BCobZuiYLdHWzmEPUB3RVV6hizQaXSV4e400KmlZ32WK');
 
-
-
-
-const CheckoutForm = (props)=>{
+const CheckoutForm = (props,{success})=>{
   const stripe = useStripe();
   const elements = useElements();
-
-
+  const [succeeded, setSucceeded] = useState(false);
+  const [error, setError] = useState(null);
+  const [processing, setProcessing] = useState('');
+  const [disabled, setDisabled] = useState(true);
+  const [clientSecret, setClientSecret] = useState('');
   const [paymentRequest, setPaymentRequest] = useState(null);
-    useEffect(() => {
+
+  useEffect(() => {
     // Create PaymentIntent as soon as the page loads
     window
-      .fetch("/create-payment-intent", {
+      .fetch("/secret", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+
         },
-        body: JSON.stringify({items: [{ id: "xl-tshirt" }]})
+        body: JSON.stringify({items: [{ id: "book"}]})
       })
       .then(res => {
         return res.json();
@@ -36,72 +42,50 @@ const CheckoutForm = (props)=>{
       .then(data => {
         setClientSecret(data.clientSecret);
       });
-    }, []);
-  
-  const handleSubmit = async () => {
-    console.log(elements);
-    console.log("HEEELO")
-    const { error, paymentMethod } = await stripe.createPaymentMethod({
-      type: 'card',
-      card: elements.getElement(CardElement),
-    });
-    // setProcessing(true);
+  }, []);
 
-        
-    return stripe.confirmCardPayment(data.clientSecret, {
+  const handleSubmit = async ev => {
+    ev.preventDefault();
+    setProcessing(true);
+    var response = fetch('/secret').then(function(response) {
+      return response.json();
+    }).then(function(responseJson) {
+      var clientSecret = responseJson.client_secret;
+      // Render the form to collect payment details, then
+      // call stripe.confirmCardPayment() with the client secret.
+    });
+    console.log(response)
+    console.log("Test")
+    console.log(clientSecret)
+    const result = await stripe.confirmCardPayment(clientSecret, {
       payment_method: {
-        card: elements.getElement(CardElement)
+        card: elements.getElement(CardElement),
+        billing_details: {
+          name: name,
+        },
       }
     });
 
-     
-    paymentRequest.on('paymentmethod', async (ev) => {
-    // Confirm the PaymentIntent without handling potential next actions (yet).
-    const {paymentIntent, error: confirmError} = await stripe.confirmCardPayment(
-      clientSecret,
-      {payment_method: ev.paymentMethod.id},
-      {handleActions: false}
-    );
-    console.log(paymentIntent,'This is payment intent');
-
-    // window.location.href = "/success"
-
-
-
-    if (confirmError) {
-      // Report to the browser that the payment failed, prompting it to
-      // re-show the payment interface, or show an error message and close
-      // the payment interface.
-      ev.complete('fail');
-    } else {
-      // Report to the browser that the confirmation was successful, prompting
-      // it to close the browser payment method collection interface.
-      ev.complete('success');
-      // Check if the PaymentIntent requires any actions and if so let Stripe.js
-      // handle the flow. If using an API version older than "2019-02-11" instead
-      // instead check for: `paymentIntent.status === "requires_source_action"`.
-      if (paymentIntent.status === "requires_action") {
-        // Let Stripe.js handle the rest of the payment flow.
-        const {error} = await stripe.confirmCardPayment(clientSecret);
-        if (error) {
-          // The payment failed -- ask your customer for a new payment method.
-          console.log('NEW PAYMENT PLEASE')
-          alert(paymentIntent.error.message);
-
-        } else {
-          // The payment has succeeded.
-          window.location.href = '/success.html'
-        }
+      if (result.error) {
+        // Show error to your customer (e.g., insufficient funds)
+        console.log(result.error.message);
       } else {
-        con
-        // The payment has succeeded.
-      }
-    }
-  });
-    console.log(error)
-    console.log(paymentMethod)
-  }
+        // The payment has been processed!
+        if (result.paymentIntent.status === 'succeeded') {
+          // Show a success message to your customer
+          // There's a risk of the customer closing the window before callback
+          // execution. Set up a webhook or plugin to listen for the
+          // payment_intent.succeeded event that handles any business critical
+          // post-payment actions.
+          //window.location.href = "/success"
+          //success();
+          console.log(success);
+          window.location.href = "/success"
 
+        }
+      }
+
+  }
     return (
     <div className = "AppWrapper">
     <form id="payment-form" className="Form" onSubmit={handleSubmit}>
@@ -114,7 +98,7 @@ const CheckoutForm = (props)=>{
           placeholder="Jane Doe"
           required
           autoComplete="name"
-
+          value = {name}
         />
         <Field
           label="Email"
@@ -123,7 +107,7 @@ const CheckoutForm = (props)=>{
           placeholder="janedoe@gmail.com"
           required
           autoComplete="email"
-
+          value = {email}
         />
         <Field
           label="Phone"
@@ -132,15 +116,21 @@ const CheckoutForm = (props)=>{
           placeholder="(941) 555-0123"
           required
           autoComplete="tel"
+          value = {phone}
         />
       </fieldset>
       <CardElementContainer>        
         <CardElement id="card-element" options={CARD_ELEMENT_OPTIONS}/>
       </CardElementContainer>
       
-      <button disabled={!stripe} onClick={handleSubmit}>Confirm order</button>
-      {/* {error && <ErrorMessage>{error.message}</ErrorMessage>} */}
-
+      <button disabled={!stripe} onClick={handleSubmit} >Confirm order</button>
+      {/* Show any error that happens when processing the payment */}
+      {error && (
+        <div className="card-error" role="alert">
+          {error}
+        </div>
+      )}
+      {/* Show a success message upon completion */}
     </form>
 
     </div>
